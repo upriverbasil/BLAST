@@ -1,5 +1,5 @@
 import collections
-
+import numpy as np
 class Node:
 	def __init__(self, hash_score, positions):
 		self.hash_score = hash_score
@@ -120,8 +120,78 @@ class BLAST:
 		self.hit_kmers = l
 		print(self.hit_kmers)
 
+	def smith_waterman(self,d,t,k):
+		matrix= np.zeros((len(t)+1,len(d)+1))
+		for i in range(1,len(t)+1):
+			for j in range(1,len(d)+1):
+				matrix[i,j] = max(matrix[i][j-1]-1, matrix[i-1][j]-1, matrix[i-1][j-1] + (1 if t[i-1] == d[j-1] else -1))
+		pos=[]
+		for i in self.hit_kmers:
+			temp=[]
+			temp.append(i.start_pos)
+			for j in i.positions:
+				temp.append(j)
+			pos.append(temp)
+		matches=[]
+		quers=[]
+		for i in pos:
+			for j in range(0,len(i)-1):
+				match=""
+				q=""
+				x=i[0]+1
+				y=i[j+1]+1
+				#print(x,y,((len(t)-k+1)*k)-1)
+				iter=1
+				cur=matrix[x][y]
+				if t[x-1]==d[y-1]:
+					match+=d[y-1]
+					q+=t[x-1]
+				else:
+					match+=d[y-1]
+					q+="-"
+				while x< len(t)+1 and y<len(d):
+					iter+=1
+					if x!= len(t):
+						right= matrix[x][y+1]
+						bot= matrix[x+1][y]
+						diag= matrix[x+1][y+1]
+					else:
+						right= matrix[x][y+1]
+						bot= 0
+						diag= 0
+					cur=matrix[x][y]
+					values=[right,bot,diag]
+					direc = max(right,bot,diag)
+					index_min = max(range(len(values)), key=values.__getitem__)
+					if (iter-1)>=((len(t)-k+1)*k)-1:
+						break
+					else:
+						cur=direc
+						if index_min==0:
+							x=x
+							y=y+1
+							q+="-"
+							match+=d[y-1]
+						elif index_min==1:
+							x=x+1
+							y=y
+							match+="-"
+							q+=t[x-1]
+						else:
+							x=x+1
+							y=y+1
+							match+=d[y-1]
+							q+=t[x-1]
+				matches.append(match)
+				quers.append(q)
+		print("query",quers)
+		print("database",matches)
+		print(matrix)
+
 if __name__ == '__main__':
-	a = BLAST("ACTACT","ACG",3)
+	database= "GGACGGATTCCATTGGATA"
+	target = "ATCG"
+	a = BLAST(database,target,3)
 	a.kmers_positions()
 	a.kmers_hash_table()
 	a.make_binary_tree()
@@ -129,3 +199,4 @@ if __name__ == '__main__':
 	print(a.binary_search(78))
 	print(a.binary_search(35))
 	a.match_kmer_binary_tree()
+	a.smith_waterman(database,"ATCG",3)
