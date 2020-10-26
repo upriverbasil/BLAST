@@ -16,23 +16,24 @@ class Node:
 		return f'Node hash_score:{self.hash_score} Position:{self.positions}'
 
 class K_Mer:
-	def __init__(self, start_pos, positions):
+	def __init__(self, start_pos, positions, sequence):
 		self.start_pos = start_pos
 		self.positions = positions
+		self.sequence = sequence
 	def __eq__(self, other):
 		if isinstance(other, Node):
-			return self.start_pos == other.start_pos and self.positions == other.positions
+			return self.start_pos == other.start_pos and self.positions == other.positions and self.sequence == sequence
 		return False
 	
 	def __repr__(self):
-		return f'Kmer start position:{self.start_pos} where it can be found:{self.positions}'
+		return f'Kmer Sequence: {self.sequence} start position:{self.start_pos} where it can be found:{self.positions}'
 
 class BLAST:
 	def __init__(self, database, query, word_length,HSSP = 1):
 		self.database = database
 		self.word_length = word_length
 		self.kmers = {}
-		self.hash_table = {'A':1,'G':2,'C':3,'T':4}
+		self.hash_table = {'A':0,'G':2,'C':1,'T':3}
 		self.kmers_hash_scores = {}
 		self.binary_tree_array = []
 		self.query = query
@@ -81,7 +82,8 @@ class BLAST:
 		hash_score = 0
 		word_length = len(kmer)
 		for i in range(0,word_length) :
-			hash_score+=(self.hash_table[kmer[i]]*(4**i))
+			hash_score+=(self.hash_table[kmer[word_length-i-1]]*(4**i))
+
 		return hash_score
 
 	def kmers_positions(self):
@@ -115,8 +117,9 @@ class BLAST:
 			for j in self.possible_strings:
 				code = self.hash_code(j)
 				idx = self.binary_search(code)
+				print(j,code)
 				if(idx!=None):
-					l.append(K_Mer(i,idx.positions))
+					l.append(K_Mer(i,idx.positions,j))
 		self.hit_kmers = l
 		print(self.hit_kmers)
 
@@ -202,3 +205,10 @@ if __name__ == '__main__':
 	print(a.binary_search(35))
 	a.match_kmer_binary_tree()
 	a.smith_waterman(database,"ATCG",3)
+	print(a.hash_code("TGAC"))
+
+
+
+
+
+
