@@ -140,7 +140,7 @@ class BLAST:
 				q=""
 				x=i[0]+1
 				y=i[j+1]+1
-				#print(x,y,((len(t)-k+1)*k)-1)
+				print(x,y)
 				iter=1
 				cur=matrix[x][y]
 				if t[x-1]==d[y-1]:
@@ -163,25 +163,27 @@ class BLAST:
 					values=[right,bot,diag]
 					direc = max(right,bot,diag)
 					index_min = max(range(len(values)), key=values.__getitem__)
-					if (iter-1)>=((len(t)-k+1)*k)-1:
-						break
-					else:
-						cur=direc
-						if index_min==0:
-							x=x
-							y=y+1
-							q+="-"
-							match+=d[y-1]
-						elif index_min==1:
-							x=x+1
-							y=y
-							match+="-"
-							q+=t[x-1]
+					if (iter-1)%k==0:
+						if cur<direc:
+							continue
 						else:
-							x=x+1
-							y=y+1
-							match+=d[y-1]
-							q+=t[x-1]
+							break
+					cur=direc
+					if index_min==0:
+						x=x
+						y=y+1
+						q+="-"
+						match+=d[y-1]
+					elif index_min==1:
+						x=x+1
+						y=y
+						match+="-"
+						q+=t[x-1]
+					else:
+						x=x+1
+						y=y+1
+						match+=d[y-1]
+						q+=t[x-1]
 				matches.append(match)
 				quers.append(q)
 		print("query",quers)
