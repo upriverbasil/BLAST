@@ -1,6 +1,7 @@
 import collections
 import numpy as np
 from Bio import SeqIO
+import math
 
 class Node:
 	def __init__(self, hash_score, positions):
@@ -26,7 +27,7 @@ class K_Mer:
 		if isinstance(other, Node):
 			return self.start_pos == other.start_pos and self.positions == other.positions and self.sequence == sequence
 		return False
-	
+
 	def __repr__(self):
 		return f'Kmer Sequence: {self.sequence} start position:{self.start_pos} where it can be found:{self.positions}'
 
@@ -113,7 +114,7 @@ class BLAST:
 		for i in range(0,len(self.query)-self.word_length+1):
 			seq = self.query[i:i+self.word_length]
 			self.possible_strings = {seq}
-			
+
 			self.recur(seq,0,self.HSSP,0)
 			print(self.possible_strings)
 			for j in self.possible_strings:
@@ -136,7 +137,7 @@ class BLAST:
 		for i in range(1,len(t)+1):
 			for j in range(1,len(d)+1):
 				matrix[i,j] = max(matrix[i][j-1] + insertion, matrix[i-1][j] + deletion, matrix[i-1][j-1] + (1 if t[i-1] == d[j-1] else +mismatch),0)
-		
+
 		pos=[]
 		#extracting the previosuly generated alignment starting positions
 		for i in self.hit_kmers:
@@ -151,7 +152,7 @@ class BLAST:
 		#iterating over the matrix from each alignment starting position and tracing back the alignment
 		for i in pos:
 			for j in range(0,len(i)-1):
-				score=0	
+				score=0
 				match=""
 				q=""
 				x=i[0]+1
@@ -216,6 +217,23 @@ class BLAST:
 		#print("database",matches)
 		#print(matrix)
 		print(max(scores),max(range(len(scores)), key=scores.__getitem__))
+
+'''
+S - Alignment score
+K, lambda - Parameters
+m - length of database
+n - length of query sequence
+'''
+
+def statistics(n, S, lambda = 1.09861, K = 0.3333, m):
+
+	bit_score = (lamba*S-math.log(K))/math.log(2)
+	e_value = (m*n)/(2**bit_score)
+	p_value = 2**(-1*bit_score)
+
+	print("E-Value : "+str(e_value))
+	print("P-Value : "+str(p_value))
+	print("bit_score : "+str(bit_score))
 
 if __name__ == '__main__':
 	fasta_sequences = SeqIO.parse(open("sequence.fasta"),'fasta')
