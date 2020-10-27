@@ -1,5 +1,7 @@
 import collections
 import numpy as np
+from Bio import SeqIO
+
 class Node:
 	def __init__(self, hash_score, positions):
 		self.hash_score = hash_score
@@ -93,18 +95,18 @@ class BLAST:
 				self.kmers[seq].append(i)
 			else:
 				self.kmers[seq] = [i]
-		print(self.kmers)
+		#print(self.kmers)
 
 	def kmers_hash_table(self):
 		for i in self.kmers:
 			self.kmers_hash_scores[i] = self.hash_code(i)
-		print(self.kmers_hash_scores)
+		#print(self.kmers_hash_scores)
 
 	def make_binary_tree(self):
 		for i in self.kmers_hash_scores:
 			self.binary_tree_array.append(Node(self.kmers_hash_scores[i], self.kmers[i]))
 		self.binary_tree_array = sorted(self.binary_tree_array)
-		print(self.binary_tree_array)
+		#print(self.binary_tree_array)
 
 	def match_kmer_binary_tree(self):
 		l = []
@@ -117,17 +119,18 @@ class BLAST:
 			for j in self.possible_strings:
 				code = self.hash_code(j)
 				idx = self.binary_search(code)
-				print(j,code)
+				#print(j,code)
 				if(idx!=None):
 					l.append(K_Mer(i,idx.positions,j))
 		self.hit_kmers = l
-		print(self.hit_kmers)
+		#print(self.hit_kmers)
 
 	def smith_waterman(self,d,t,k):
 		matrix= np.zeros((len(t)+1,len(d)+1))
 		insertion=-1
 		deletion = -1
 		mismatch=-1
+		mscore=1
 		for i in range(1,len(t)+1):
 			for j in range(1,len(d)+1):
 				matrix[i,j] = max(matrix[i][j-1] + insertion, matrix[i-1][j] + deletion, matrix[i-1][j-1] + (1 if t[i-1] == d[j-1] else +mismatch),0)
@@ -140,20 +143,23 @@ class BLAST:
 			pos.append(temp)
 		matches=[]
 		quers=[]
+		scores=[]
 		for i in pos:
 			for j in range(0,len(i)-1):
+				score=0	
 				match=""
 				q=""
 				x=i[0]+1
 				y=i[j+1]+1
-				print(x,y)
 				iter=1
 				cur=matrix[x][y]
 				if t[x-1]==d[y-1]:
 					match+=d[y-1]
 					q+=t[x-1]
+					score+=mscore
 				else:
 					match+=d[y-1]
+					score+=insertion
 					q+="-"
 				while x< len(t)+1 and y<len(d):
 					iter+=1
@@ -180,34 +186,41 @@ class BLAST:
 						y=y+1
 						q+="-"
 						match+=d[y-1]
+						score+=insertion
 					elif index_min==1:
 						x=x+1
 						y=y
 						match+="-"
 						q+=t[x-1]
+						score+=deletion
 					else:
 						x=x+1
 						y=y+1
 						match+=d[y-1]
 						q+=t[x-1]
+						score+=mscore
 				matches.append(match)
 				quers.append(q)
-		print("query",quers)
-		print("database",matches)
-		print(matrix)
+				scores.append(score)
+		#print("query",quers)
+		#print("database",matches)
+		#print(matrix)
+		print(max(scores),max(range(len(scores)), key=scores.__getitem__))
 
 if __name__ == '__main__':
-	database= "ATCGA"
-	target = "ATCG"
+	fasta_sequences = SeqIO.parse(open("sequence.fasta"),'fasta')
+	seq=""
+	for fasta in fasta_sequences:
+		seq+=str(fasta.seq)
+	seq=seq.replace("N","")
+	#print(seq)
+	database= seq
+	target = "GCCTATACAGTTGAACTCGGTACAGAAGTAAATGAGTTCGCCTGTGTTGTGGCAGATGCTGTCATAAAAACTTTGCAACCAGTATCTGAATTACTTACACCACTGGGCATTGATTTAGATGAGTGGAGTATGGCTACATACTACTTATTTGATGAGTCTGGTGAGTTTAAATTGGCTTC"
+	print(len(target))
 	k=3
 	a = BLAST(database,target,k)
 	a.kmers_positions()
 	a.kmers_hash_table()
 	a.make_binary_tree()
-	print(a.binary_search(57))
-	print(a.binary_search(78))
-	print(a.binary_search(35))
 	a.match_kmer_binary_tree()
 	a.smith_waterman(database,target,k)
-	print(a.hash_code("TGAC"))
-
