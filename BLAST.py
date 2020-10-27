@@ -125,9 +125,12 @@ class BLAST:
 
 	def smith_waterman(self,d,t,k):
 		matrix= np.zeros((len(t)+1,len(d)+1))
+		insertion=-1
+		deletion = -1
+		mismatch=-1
 		for i in range(1,len(t)+1):
 			for j in range(1,len(d)+1):
-				matrix[i,j] = max(matrix[i][j-1]-1, matrix[i-1][j]-1, matrix[i-1][j-1] + (1 if t[i-1] == d[j-1] else -1))
+				matrix[i,j] = max(matrix[i][j-1] + insertion, matrix[i-1][j] + deletion, matrix[i-1][j-1] + (1 if t[i-1] == d[j-1] else +mismatch),0)
 		pos=[]
 		for i in self.hit_kmers:
 			temp=[]
@@ -166,7 +169,7 @@ class BLAST:
 					values=[right,bot,diag]
 					direc = max(right,bot,diag)
 					index_min = max(range(len(values)), key=values.__getitem__)
-					if (iter-1)%k==0:
+					if (iter)%k==0:
 						if cur<direc:
 							continue
 						else:
@@ -194,9 +197,10 @@ class BLAST:
 		print(matrix)
 
 if __name__ == '__main__':
-	database= "GGACGGATTCCATTGGATA"
+	database= "ATCGA"
 	target = "ATCG"
-	a = BLAST(database,target,3)
+	k=3
+	a = BLAST(database,target,k)
 	a.kmers_positions()
 	a.kmers_hash_table()
 	a.make_binary_tree()
@@ -204,11 +208,6 @@ if __name__ == '__main__':
 	print(a.binary_search(78))
 	print(a.binary_search(35))
 	a.match_kmer_binary_tree()
-	a.smith_waterman(database,"ATCG",3)
+	a.smith_waterman(database,target,k)
 	print(a.hash_code("TGAC"))
-
-
-
-
-
 
