@@ -127,14 +127,18 @@ class BLAST:
 
 	def smith_waterman(self,d,t,k):
 		matrix= np.zeros((len(t)+1,len(d)+1))
+
 		insertion=-1
 		deletion = -1
 		mismatch=-1
 		mscore=1
+		#scoring the matrix based on the scores defined above
 		for i in range(1,len(t)+1):
 			for j in range(1,len(d)+1):
 				matrix[i,j] = max(matrix[i][j-1] + insertion, matrix[i-1][j] + deletion, matrix[i-1][j-1] + (1 if t[i-1] == d[j-1] else +mismatch),0)
+		
 		pos=[]
+		#extracting the previosuly generated alignment starting positions
 		for i in self.hit_kmers:
 			temp=[]
 			temp.append(i.start_pos)
@@ -144,6 +148,7 @@ class BLAST:
 		matches=[]
 		quers=[]
 		scores=[]
+		#iterating over the matrix from each alignment starting position and tracing back the alignment
 		for i in pos:
 			for j in range(0,len(i)-1):
 				score=0	
@@ -161,6 +166,7 @@ class BLAST:
 					match+=d[y-1]
 					score+=insertion
 					q+="-"
+				#break condition 1 = we reach the end of the matrix
 				while x< len(t)+1 and y<len(d):
 					iter+=1
 					if x!= len(t):
@@ -175,24 +181,28 @@ class BLAST:
 					values=[right,bot,diag]
 					direc = max(right,bot,diag)
 					index_min = max(range(len(values)), key=values.__getitem__)
+					#break condition 2 = length of alignment is divisible by k and further movement is not favorable i.e all indexes have lower score than present index in the matrix
 					if (iter)%k==0:
 						if cur<direc:
 							continue
 						else:
 							break
 					cur=direc
+					#moving to the right
 					if index_min==0:
 						x=x
 						y=y+1
 						q+="-"
 						match+=d[y-1]
 						score+=insertion
+					#moving to the bottom
 					elif index_min==1:
 						x=x+1
 						y=y
 						match+="-"
 						q+=t[x-1]
 						score+=deletion
+					#moving diagnal
 					else:
 						x=x+1
 						y=y+1
