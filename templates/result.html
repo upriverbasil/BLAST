@@ -1,0 +1,24 @@
+<!DOCTYPE html> 
+  
+<html> 
+<head> 
+    <title>Alignments</title> 
+</head> 
+<body> 
+  
+    <ul> 
+        {% for align_item in alignments %} 
+            <li>
+              <p>Query Sequence   : {{ align_item[4] }}</p>
+              <p>Database Sequence: {{ align_item[5] }}</p>
+              <p>Sequence ID : {{ align_item[6] }}</p>
+              <p>Start Position : {{ align_item[3] }} - {{ align_item[7] }}</p>
+              <h5>E Value : {{ align_item[1]}}    Bit Score : {{ align_item[2] }}</h5>
+              <h5>P-score {{ align_item[0] }}</h5>
+              <hr>
+            </li> 
+        {% endfor %} 
+        </ul> 
+  
+</body> 
+</html> 

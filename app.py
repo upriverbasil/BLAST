@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, redirect
 from werkzeug.utils import secure_filename
+import BLAST
 
 
 app = Flask(__name__)
@@ -21,16 +22,16 @@ def upload_file():
 @app.route('/submit', methods=['POST'])
 def submit():
     if request.method == "POST":
-        hssp = request.form['hssp']
-        query = request.form['query_seq']
-        w_l = request.form['word_length']
-        insertion = request.form['insertion']
-        deletion = request.form['deletion']
-        mismatch = request.form['mismatch']
-        mscore = request.form['mscore']
-        print(hssp, query, w_l, insertion, deletion, mismatch, mscore)
-
-        return render_template('results.html')
+        hssp = int(request.form['hssp'])
+        query = str(request.form['query_seq'])
+        w_l = int(request.form['word_length'])
+        insertion = int(request.form['insertion'])
+        deletion = int(request.form['deletion'])
+        mismatch = int(request.form['mismatch'])
+        mscore = int(request.form['mscore'])
+        blast = BLAST.BLAST("db_seq.fasta", query, w_l, hssp, insertion,deletion,mismatch,mscore)
+        alg = blast.run()
+        return render_template('result.html', alignments = alg)
 
 if __name__ == '__main__':
     app.run()

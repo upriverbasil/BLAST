@@ -5,6 +5,9 @@ from Bio import SeqIO
 import math
 
 class Node:
+	"""
+	
+	"""
 	def __init__(self, hash_score, positions):
 		self.hash_score = hash_score
 		self.positions = positions
@@ -59,6 +62,11 @@ class BLAST:
 			seq = str(fasta.seq)
 			seq=seq.replace("N","")
 			self.database = seq
+			self.kmers = {}
+			self.kmers_hash_scores = {}
+			self.binary_tree_array = []
+			self.possible_strings = {}
+			self.hit_kmers = []
 			target = self.query
 			self.kmers_positions()
 			self.kmers_hash_table()
@@ -66,14 +74,13 @@ class BLAST:
 			self.match_kmer_binary_tree()
 			print("q length -> ",len(target), " db_len -> ", len(self.database), " key-> ", key)
 			key_res = self.smith_waterman(self.database,target,self.word_length,key)
-			print(key_res, len(key_res))
 			for i in key_res:
-				final_results_array.append(key_res)
+				final_results_array.append(i)
 		final_results_array = np.array(final_results_array)
 		print(final_results_array.shape, " <final shape")
 		temp = final_results_array[final_results_array[:,0].argsort()]
-		print(temp)
 		final_results_array = temp
+		return final_results_array
 
 	def binary_search(self, val):
 		low = 0
@@ -198,7 +205,7 @@ class BLAST:
 		quers=[]
 		scores=[]
 		#iterating over the matrix from each alignment starting position and tracing back the alignment
-		print(len(pos))
+		print(len(pos), len(d), len(t))
 		for i in pos:
 			for j in range(0,len(i)-1):
 				score=0
@@ -289,29 +296,8 @@ class BLAST:
 				bit_score = stats[0]
 				e_value = stats[1]
 				p_value = stats[2]
-				temp = [p_value, e_value, bit_score, st_pos, query_match, db_match, key]
+				temp = [p_value, e_value, bit_score, st_pos, query_match, db_match, key, (st_pos+len(query_match))]
 				final_ans.append(temp)
 				enc_set.add(st_pos)
 		return final_ans
-		#print(max(scores),max(range(len(scores)), key=scores.__getitem__))
 
-
-if __name__ == '__main__':
-	# fasta_sequences = SeqIO.parse(open("sequence.fasta"),'fasta')
-	# seq=""
-	# for fasta in fasta_sequences:
-	# 	seq+=str(fasta.seq)
-	# seq=seq.replace("N","")
-	# #print(seq)
-	# database= seq
-	target = "GCCTATACAGTTGAACTCGGTACAGAAGTAAATGAGTTCGCCTGTGTTGTGGCAGATGCTGTCATAAAAACTTTGCAACCAGTATCTGAATTACTTACACCACTGGGCATTGATTTAGATGAGTGGAGTATGGCTACATACTACTTATTTGATGAGTCTGGTGAGTTTAAATTGGCTTC"
-	# print(len(target))
-	# k=3
-	# a = BLAST(database,target,k)
-	# a.kmers_positions()
-	# a.kmers_hash_table()
-	# a.make_binary_tree()
-	# a.match_kmer_binary_tree()
-	# a.smith_waterman(database,target,k)
-	blast = BLAST("db_seq.fasta", target, 3, 1, -1,-1,-1,1)
-	blast.run()
