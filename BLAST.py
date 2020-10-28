@@ -1,4 +1,5 @@
 import collections
+from os import stat
 import numpy as np
 from Bio import SeqIO
 import math
@@ -116,7 +117,7 @@ class BLAST:
 			self.possible_strings = {seq}
 
 			self.recur(seq,0,self.HSSP,0)
-			print(self.possible_strings)
+			#print(self.possible_strings)
 			for j in self.possible_strings:
 				code = self.hash_code(j)
 				idx = self.binary_search(code)
@@ -126,9 +127,24 @@ class BLAST:
 		self.hit_kmers = l
 		#print(self.hit_kmers)
 
+
+	'''
+	S - Alignment score
+	K, lamba - Parameters
+	m - length of database
+	n - length of query sequence
+	'''
+	def statistics(self, n, S, m, lamba = 1.09861, K = 0.3333):
+		bit_score = (lamba*S-math.log(K))/math.log(2)
+		e_value = (m*n)/(2**bit_score)
+		p_value = 2**(-1*bit_score)
+		return [bit_score, e_value, p_value]
+		# print("E-Value : "+str(e_value))
+		# print("P-Value : "+str(p_value))
+		# print("bit_score : "+str(bit_score))
+
 	def smith_waterman(self,d,t,k):
 		matrix= np.zeros((len(t)+1,len(d)+1))
-
 		insertion=-1
 		deletion = -1
 		mismatch=-1
@@ -210,30 +226,43 @@ class BLAST:
 						match+=d[y-1]
 						q+=t[x-1]
 						score+=mscore
-				matches.append(match)
-				quers.append(q)
-				scores.append(score)
+				min_thresh = max(1, 0.1*len(target))
+				if(len(q)>min_thresh):
+					matches.append(match)
+					quers.append(q)
+					scores.append(score)
 		#print("query",quers)
+		#print(len(quers), len(scores), matrix.shape)
+		#print(scores[450], quers[450], matches[450])
 		#print("database",matches)
 		#print(matrix)
-		print(max(scores),max(range(len(scores)), key=scores.__getitem__))
+		N = 5
+		res = sorted(range(len(scores)), key = lambda sub: scores[sub])#[-N:] 
+		res = res[::-1]
+		enc_set = set()
+		n_counter = 0
+		for i in res:
+			query_match = quers[i]
+			db_match = matches[i]
+			if db_match not in enc_set:
+				n_counter+=1
+				if n_counter>N:
+					break
+				match_score = scores[i]
+				stats = self.statistics(len(target), match_score, len(database))
+				bit_score = stats[0]
+				e_value = stats[1]
+				p_value = stats[2]
+				print("--------Match--------")
+				print(query_match," <-Query Seq")
+				print(db_match, " <-Database Match")
+				print("Alignment Score: ",match_score)
+				print("Bit Score: ",bit_score)
+				print("e Value: ", e_value)
+				print("p Value: ",p_value)
+				enc_set.add(db_match)
+		#print(max(scores),max(range(len(scores)), key=scores.__getitem__))
 
-'''
-S - Alignment score
-K, lambda - Parameters
-m - length of database
-n - length of query sequence
-'''
-
-def statistics(n, S, lambda = 1.09861, K = 0.3333, m):
-
-	bit_score = (lamba*S-math.log(K))/math.log(2)
-	e_value = (m*n)/(2**bit_score)
-	p_value = 2**(-1*bit_score)
-
-	print("E-Value : "+str(e_value))
-	print("P-Value : "+str(p_value))
-	print("bit_score : "+str(bit_score))
 
 if __name__ == '__main__':
 	fasta_sequences = SeqIO.parse(open("sequence.fasta"),'fasta')
