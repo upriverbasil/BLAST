@@ -1,53 +1,53 @@
-TEAM MEMBERS - Bhavay Aggarwal, Chandan Gupta, Gavish Gupta, Saad Ahmad
-COURSE - Algorithms In BioInformatics
-INTRODUCTION
+TEAM MEMBERS - Bhavay Aggarwal, Chandan Gupta, Gavish Gupta, Saad Ahmad\
+COURSE - Algorithms In BioInformatics\
+INTRODUCTION\
 
-This project contains an implementation of BLAST(Basic Local Alignment Search Tool). BLAST helps to align the query sequence with the sequence database and gives an optimal result in reasonable time. The steps used in the implementation of BLAST are:
-	a) Creating K-mers of length = word_length from the database sequence.
+This project contains an implementation of BLAST(Basic Local Alignment Search Tool). BLAST helps to align the query sequence with the sequence database and gives an optimal result in reasonable time. The steps used in the implementation of BLAST are:\
+	a) Creating K-mers of length = word_length from the database sequence.\
 
-                              ||
-                              ||
-                              \/
+                              ||\
+                              ||\
+                              \/\
 
-	b) Defining a suitable hash function to faster the search of sequences.
+	b) Defining a suitable hash function to faster the search of sequences.\
 
-                              ||
-                              ||
-                              \/
+                              ||\
+                              ||\
+                              \/\
 
-	c) Creating a Binary Search Tree. Each node of BST contains a hashcode (for a particular K-mer) and its position in the database sequence.
-                              ||
-                              ||
-                              \/
+	c) Creating a Binary Search Tree. Each node of BST contains a hashcode (for a particular K-mer) and its position in the database sequence.\
+                              ||\
+                              ||\
+                              \/\
 
-	d) Creating K-mers of length = word_length from the query sequence.
+	d) Creating K-mers of length = word_length from the query sequence.\
 
-                              ||
-                              ||
-                              \/
+                              ||\
+                              ||\
+                              \/\
 
-	e) For each K-mer from the query sequence find all the possible mutated strings within the HSSP threshold. Form a list for each K-mer separately and assign a hash code to every member of the list using the same hash function.
-                              ||
-                              ||
-                              \/
+	e) For each K-mer from the query sequence find all the possible mutated strings within the HSSP threshold. Form a list for each K-mer separately and assign a hash code to every member of the list using the same hash function.\
+                              ||\
+                              ||\
+                              \/\
 
-	f) Search the BST for exact hashcode matches and if found a match store the K-mer starting index in query sequence and corresponding matched K-mer's position(s) in the database.
+	f) Search the BST for exact hashcode matches and if found a match store the K-mer starting index in query sequence and corresponding matched K-mer's position(s) in the database.\
 
-                              ||
-                              ||
-                              \/
+                              ||\
+                              ||\
+                              \/\
 
-	g) Seed and Extend all the hits found between the K-mers using Smith–Waterman algorithm and traceback to find optimal alignments.
-                              ||
-                              ||
-                              \/
+	g) Seed and Extend all the hits found between the K-mers using Smith–Waterman algorithm and traceback to find optimal alignments.\
+                              ||\
+                              ||\
+                              \/\
 
-	h) Generate Statistics(bit-scores, pvalue, evalue) using Karlin-Altschul formula
-                              ||
-                              ||
-                              \/
+	h) Generate Statistics(bit-scores, pvalue, evalue) using Karlin-Altschul formula\
+                              ||\
+                              ||\
+                              \/\
 
-	i) Collects form parameters from web page and processes on backend built on flutter framework. Displays result on a new page.
+	i) Collects form parameters from web page and processes on backend built on flutter framework. Displays result on a new page.\
 
 CODE DESCRIPTION - 
 
