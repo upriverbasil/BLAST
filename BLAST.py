@@ -1,3 +1,9 @@
+
+'''
+TEAM MEMBERS - Bhavay Aggarwal, Chandan Gupta, Gavish Gupta, Saad Ahmad
+COURSE - Algorithms In BioInformatics
+DESCRIPTION-Readme.txt file contains all the information about working of the file please refer to that.
+'''
 import collections
 from os import stat
 import numpy as np
@@ -5,9 +11,6 @@ from Bio import SeqIO
 import math
 
 class Node:
-	"""
-	
-	"""
 	def __init__(self, hash_score, positions):
 		self.hash_score = hash_score
 		self.positions = positions
@@ -37,6 +40,17 @@ class K_Mer:
 
 class BLAST:
 	def __init__(self, database, query, word_length,HSSP, insertion, deletion,mismatch,mscore):
+		"""
+		Constructor
+		database: filename of database fasta file
+		query: Query sequence to be inputted without Fasta header or double quotes
+		word_length: Word length for K-mers
+		HSSP: HSSP cuttof (int)
+		insertion: insertion penalty (int)
+		deletion: deletion penalty (int)
+		mismatch: mismatch penalty (int)
+		mscore: match score (int)
+		"""
 		self.db_name = database
 		self.insertion = insertion
 		self.deletion = deletion
@@ -54,6 +68,10 @@ class BLAST:
 		self.hit_kmers = []
 
 	def run(self):
+		"""
+		Used to run the complete BLAST algorithm
+		Returns: A 2d array with alignments sorted on p values
+		"""
 		fasta_sequences = SeqIO.parse(open(self.db_name),'fasta')
 		final_results_array = []
 		for fasta in fasta_sequences:
@@ -62,7 +80,7 @@ class BLAST:
 			seq = str(fasta.seq)
 			seq=seq.replace("N","")
 			self.database = seq
-			self.kmers = {}
+			self.kmers = {}				# Initializing evrything
 			self.kmers_hash_scores = {}
 			self.binary_tree_array = []
 			self.possible_strings = {}
@@ -72,17 +90,19 @@ class BLAST:
 			self.kmers_hash_table()
 			self.make_binary_tree()
 			self.match_kmer_binary_tree()
-			print("q length -> ",len(target), " db_len -> ", len(self.database), " key-> ", key)
+			print("q length -> ",len(target), " db_len -> ", len(self.database), " key-> ", key) # Milestone check
 			key_res = self.smith_waterman(self.database,target,self.word_length,key)
 			for i in key_res:
 				final_results_array.append(i)
 		final_results_array = np.array(final_results_array)
-		print(final_results_array.shape, " <final shape")
-		temp = final_results_array[final_results_array[:,0].argsort()]
+		temp = final_results_array[final_results_array[:,0].argsort()]	# Sort on P value
 		final_results_array = temp
 		return final_results_array
 
 	def binary_search(self, val):
+		"""
+		Perform Binary search for matches
+		"""
 		low = 0
 		high = len(self.binary_tree_array)-1
 		while(low<=high):
@@ -96,6 +116,9 @@ class BLAST:
 		return None
 
 	def recur(self,s, mut, max, i):
+		"""
+		Creates all possible mutations keeping HSSP cutoff in mind
+		"""
 		if(mut>=max or i>=len(s)):
 			self.possible_strings.add(s)
 		else:
@@ -153,35 +176,37 @@ class BLAST:
 		for i in range(0,len(self.query)-self.word_length+1):
 			seq = self.query[i:i+self.word_length]
 			self.possible_strings = {seq}
-
 			self.recur(seq,0,self.HSSP,0)
-			#print(self.possible_strings)
 			for j in self.possible_strings:
 				code = self.hash_code(j)
 				idx = self.binary_search(code)
-				#print(j,code)
 				if(idx!=None):
 					l.append(K_Mer(i,idx.positions,j))
 		self.hit_kmers = l
 		#print(self.hit_kmers)
 
-
-	'''
-	S - Alignment score
-	K, lamba - Parameters
-	m - length of database
-	n - length of query sequence
-	'''
 	def statistics(self, n, S, m, lamba = 1.09861, K = 0.3333):
+		'''
+		S - Alignment score
+		K, lamba - Parameters
+		m - length of database
+		n - length of query sequence
+		Returns: e value, p value, bit score
+		'''
 		bit_score = (lamba*S-math.log(K))/math.log(2)
 		e_value = (m*n)/(2**bit_score)
 		p_value = 2**(-1*bit_score)
 		return [bit_score, e_value, p_value]
-		# print("E-Value : "+str(e_value))
-		# print("P-Value : "+str(p_value))
-		# print("bit_score : "+str(bit_score))
 
 	def smith_waterman(self,d,t,k, key):
+		"""
+		Implementation of smith waterman algorithm
+		d: database sequence
+		t: query sequence
+		k: word length
+		key: Database sequence ID
+		Returns: A 2D array of alignments sorted in p value
+		"""
 		matrix= np.zeros((len(t)+1,len(d)+1))
 		insertion= self.insertion
 		deletion = self.deletion
@@ -266,20 +291,15 @@ class BLAST:
 						match+=d[y-1]
 						q+=t[x-1]
 						score+=mscore
-				min_thresh = max(1, 0.1*len(t))
+				min_thresh = max(1, 0.1*len(t)) 	# Select only those matches which are > 10% of query sequence
 				if(len(q)>min_thresh):
 					matches.append(match)
 					quers.append(q)
-					start_positions.append(i[j+1])
+					start_positions.append(i[j+1])	# Start position in database
 					scores.append(score)
-		#print("query",quers)
-		#print(len(quers), len(scores), matrix.shape)
-		#print(scores[450], quers[450], matches[450])
-		#print("database",matches)
-		#print(matrix)
 		N = 10
-		res = sorted(range(len(scores)), key = lambda sub: scores[sub])#[-N:] 
-		res = res[::-1]
+		res = sorted(range(len(scores)), key = lambda sub: scores[sub])
+		res = res[::-1]  		# Sort in decreasing order
 		enc_set = set()
 		n_counter = 0
 		final_ans = []
@@ -289,7 +309,7 @@ class BLAST:
 			st_pos = start_positions[i]
 			if st_pos not in enc_set:
 				n_counter+=1
-				if n_counter>N:
+				if n_counter>N:			# Select only N matches
 					break
 				match_score = scores[i]
 				stats = self.statistics(len(t), match_score, len(d))

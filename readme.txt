@@ -43,7 +43,11 @@ This project contains an implementation of BLAST(Basic Local Alignment Search To
                               \/
 
 	h) Generate Statistics(bit-scores, pvalue, evalue) using Karlin-Altschul formula
-	i) UI agr hoga
+                              ||
+                              ||
+                              \/
+
+	i) Collects form parameters from web page and processes on backend built on flutter framework. Displays result on a new page.
 
 CODE DESCRIPTION - 
 
@@ -72,7 +76,13 @@ binarysearch(...)           -> Simple binary search module
 smith_waterman(...)			    -> Seeds and Extends alignment and find score and stats of the alignment.
 statistics(...)				      -> Defining the statistics required(Karlin-Altschul) 
 
-USAGE - 
+USAGE - 1) Clone the repository. 
+        2) source env/bin/activate
+        3) python app.py
+        4) Upload a database .fasta file. (Upload sequence.fasta present in extras folder of this directory)
+        5) Enter the query sequence (eg. GCCTATACAGTTGAACTCGGTACAGAAGTAAATGAGTTCGCCTGTGTTGTGGCAGATGCTGTCATAAAAACTTTGCAACCAGTATCTGAATTACTTACACCACTGGGCATTGATTTAGATGAGTGGAGTATGGCTACATACTACTTATTTGATGAGTCTGGTGAGTTTAAATTGGCTTC).
+        6) Enter Other Hyperparameters.
+        7) Wait for the results on new screen.
 
 EXAMPLES - 
 
