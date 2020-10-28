@@ -33,8 +33,13 @@ class K_Mer:
 		return f'Kmer Sequence: {self.sequence} start position:{self.start_pos} where it can be found:{self.positions}'
 
 class BLAST:
-	def __init__(self, database, query, word_length,HSSP = 1):
-		self.database = database
+	def __init__(self, database, query, word_length,HSSP, insertion, deletion,mismatch,mscore):
+		self.db_name = database
+		self.insertion = insertion
+		self.deletion = deletion
+		self.mismatch = mismatch
+		self.mscore = mscore
+		self.database = ""
 		self.word_length = word_length
 		self.kmers = {}
 		self.hash_table = {'A':0,'G':2,'C':1,'T':3}
@@ -44,6 +49,32 @@ class BLAST:
 		self.HSSP = HSSP
 		self.possible_strings = {}
 		self.hit_kmers = []
+
+	def run(self):
+		fasta_sequences = SeqIO.parse(open(self.db_name),'fasta')
+		final_results_array = []
+		for fasta in fasta_sequences:
+			keys = (fasta.description).split(" ")
+			key = keys[0]
+			seq = str(fasta.seq)
+			seq=seq.replace("N","")
+			self.database = seq
+			target = self.query
+			self.kmers_positions()
+			self.kmers_hash_table()
+			self.make_binary_tree()
+			self.match_kmer_binary_tree()
+			print("q length -> ",len(target), " db_len -> ", len(self.database), " key-> ", key)
+			key_res = self.smith_waterman(self.database,target,self.word_length,key)
+			print(key_res, len(key_res))
+			for i in key_res:
+				final_results_array.append(key_res)
+		final_results_array = np.array(final_results_array)
+		print(final_results_array.shape, " <final shape")
+		temp = final_results_array[final_results_array[:,0].argsort()]
+		print(temp)
+		final_results_array = temp
+
 	def binary_search(self, val):
 		low = 0
 		high = len(self.binary_tree_array)-1
@@ -143,12 +174,12 @@ class BLAST:
 		# print("P-Value : "+str(p_value))
 		# print("bit_score : "+str(bit_score))
 
-	def smith_waterman(self,d,t,k):
+	def smith_waterman(self,d,t,k, key):
 		matrix= np.zeros((len(t)+1,len(d)+1))
-		insertion=-1
-		deletion = -1
-		mismatch=-1
-		mscore=1
+		insertion= self.insertion
+		deletion = self.deletion
+		mismatch=self.deletion
+		mscore=self.mscore
 		#scoring the matrix based on the scores defined above
 		for i in range(1,len(t)+1):
 			for j in range(1,len(d)+1):
@@ -163,9 +194,11 @@ class BLAST:
 				temp.append(j)
 			pos.append(temp)
 		matches=[]
+		start_positions = []
 		quers=[]
 		scores=[]
 		#iterating over the matrix from each alignment starting position and tracing back the alignment
+		print(len(pos))
 		for i in pos:
 			for j in range(0,len(i)-1):
 				score=0
@@ -226,58 +259,59 @@ class BLAST:
 						match+=d[y-1]
 						q+=t[x-1]
 						score+=mscore
-				min_thresh = max(1, 0.1*len(target))
+				min_thresh = max(1, 0.1*len(t))
 				if(len(q)>min_thresh):
 					matches.append(match)
 					quers.append(q)
+					start_positions.append(i[j+1])
 					scores.append(score)
 		#print("query",quers)
 		#print(len(quers), len(scores), matrix.shape)
 		#print(scores[450], quers[450], matches[450])
 		#print("database",matches)
 		#print(matrix)
-		N = 5
+		N = 10
 		res = sorted(range(len(scores)), key = lambda sub: scores[sub])#[-N:] 
 		res = res[::-1]
 		enc_set = set()
 		n_counter = 0
+		final_ans = []
 		for i in res:
 			query_match = quers[i]
 			db_match = matches[i]
-			if db_match not in enc_set:
+			st_pos = start_positions[i]
+			if st_pos not in enc_set:
 				n_counter+=1
 				if n_counter>N:
 					break
 				match_score = scores[i]
-				stats = self.statistics(len(target), match_score, len(database))
+				stats = self.statistics(len(t), match_score, len(d))
 				bit_score = stats[0]
 				e_value = stats[1]
 				p_value = stats[2]
-				print("--------Match--------")
-				print(query_match," <-Query Seq")
-				print(db_match, " <-Database Match")
-				print("Alignment Score: ",match_score)
-				print("Bit Score: ",bit_score)
-				print("e Value: ", e_value)
-				print("p Value: ",p_value)
-				enc_set.add(db_match)
+				temp = [p_value, e_value, bit_score, st_pos, query_match, db_match, key]
+				final_ans.append(temp)
+				enc_set.add(st_pos)
+		return final_ans
 		#print(max(scores),max(range(len(scores)), key=scores.__getitem__))
 
 
 if __name__ == '__main__':
-	fasta_sequences = SeqIO.parse(open("sequence.fasta"),'fasta')
-	seq=""
-	for fasta in fasta_sequences:
-		seq+=str(fasta.seq)
-	seq=seq.replace("N","")
-	#print(seq)
-	database= seq
+	# fasta_sequences = SeqIO.parse(open("sequence.fasta"),'fasta')
+	# seq=""
+	# for fasta in fasta_sequences:
+	# 	seq+=str(fasta.seq)
+	# seq=seq.replace("N","")
+	# #print(seq)
+	# database= seq
 	target = "GCCTATACAGTTGAACTCGGTACAGAAGTAAATGAGTTCGCCTGTGTTGTGGCAGATGCTGTCATAAAAACTTTGCAACCAGTATCTGAATTACTTACACCACTGGGCATTGATTTAGATGAGTGGAGTATGGCTACATACTACTTATTTGATGAGTCTGGTGAGTTTAAATTGGCTTC"
-	print(len(target))
-	k=3
-	a = BLAST(database,target,k)
-	a.kmers_positions()
-	a.kmers_hash_table()
-	a.make_binary_tree()
-	a.match_kmer_binary_tree()
-	a.smith_waterman(database,target,k)
+	# print(len(target))
+	# k=3
+	# a = BLAST(database,target,k)
+	# a.kmers_positions()
+	# a.kmers_hash_table()
+	# a.make_binary_tree()
+	# a.match_kmer_binary_tree()
+	# a.smith_waterman(database,target,k)
+	blast = BLAST("db_seq.fasta", target, 3, 1, -1,-1,-1,1)
+	blast.run()
