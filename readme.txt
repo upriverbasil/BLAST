@@ -84,5 +84,13 @@ USAGE - 1) Clone the repository.
         6) Enter Other Hyperparameters.
         7) Wait for the results on new screen.
 
-EXAMPLES - 
+EXAMPLES - See output.html in the repository. Generated on the query mentioned above and fasta file attached. 
+Hyperparameters: 
+HSSP Cutoff = 1
+Mismatch penalty = -1
+Deletion penalty = -1
+Insertion penalty = -1
+Match Score = 1
+Word length = 3
+
 
